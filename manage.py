@@ -4,9 +4,27 @@ import os
 import sys
 
 
+def load_from_env_file():
+    """
+    Load environment variables from env.local, if option --load-env specified.
+    Good for injecting environment into PyCharm run configurations for example and no need to
+    manually load the env values for manage.py commands
+    """
+    environment_file_path = '.env'
+
+    if "--load-env" in sys.argv:
+        with open(environment_file_path) as environment_file:
+            for line in environment_file:
+                if line.strip():
+                    setting = line.strip().split("=", maxsplit=1)
+                    os.environ.setdefault(setting[0], setting[1])
+        sys.argv.remove("--load-env")
+
+
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
+    load_from_env_file()
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
