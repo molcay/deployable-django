@@ -4,20 +4,31 @@ import os
 import sys
 
 
+
 def load_from_env_file():
     """
-    Load environment variables from env.local, if option --load-env specified.
+    Load environment variables from the file, if option --load-env specified.
     Good for injecting environment into PyCharm run configurations for example and no need to
     manually load the env values for manage.py commands
+
+    You can easily change the loaded env file path with overriding
+    the environment variable called 'DJANGO_LOAD_ENV_FILE_PATH'.
+
+    Call this function anywhere before the execution command line (execute_from_command_line) in the main function.
     """
-    environment_file_path = '.env'
+    from pathlib import Path
 
     if "--load-env" in sys.argv:
-        with open(environment_file_path) as environment_file:
-            for line in environment_file:
-                if line.strip():
-                    setting = line.strip().split("=", maxsplit=1)
-                    os.environ.setdefault(setting[0], setting[1])
+        os.environ.setdefault('DJANGO_LOAD_ENV_FILE_PATH', '.env')
+        environment_file = Path(os.environ.get('DJANGO_LOAD_ENV_FILE_PATH'))
+        if environment_file.exists():
+            with environment_file.open() as env_file:
+                for line in env_file:
+                    if line.strip():
+                        key, value = line.strip().split("=", maxsplit=1)
+                        os.environ.setdefault(key, value)
+        else:
+            print(f"You provided --load-env flag but the targeted file ({environment_file}) is not found!")
         sys.argv.remove("--load-env")
 
 
